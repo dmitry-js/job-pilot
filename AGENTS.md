@@ -2,7 +2,7 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
 <!-- END:nextjs-agent-rules -->
 
@@ -37,3 +37,7 @@ Read in this exact order before any implementation:
 - `/recover` — when something breaks after one failed correction.
 - `/remember save` — when a feature spans multiple sessions.
 - `/remember restore` — when returning after a multi-session feature.
+
+## Homepage conventions
+
+- Homepage visual source: `context/designs/landing-page.png`; component patterns and homepage specific exceptions are recorded in `context/ui-registry.md`.

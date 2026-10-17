@@ -2,7 +2,7 @@
 
 @theme {
   /* Font */
-  --font-sans: "Inter", sans-serif;
+  --font-sans: var(--font-inter), "Inter", sans-serif;
 
   /* Page and surface backgrounds */
   --color-background: #f6f7fb;
@@ -78,7 +78,60 @@
 }
 
 body {
-  background: var(--color-background);
+  background: var(--color-surface);
   color: var(--color-text-primary);
   font-family: var(--font-sans), sans-serif;
+}
+
+@layer base {
+  a:focus-visible {
+    outline: 2px solid var(--color-accent-dark);
+    outline-offset: 5px;
+  }
+}
+
+@layer components {
+  .landing-nav-link {
+    @apply inline-flex min-h-11 items-center rounded-sm transition-colors hover:text-accent-dark;
+  }
+
+  .landing-button-primary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-md border border-text-darker bg-linear-to-b from-text-darker to-text-slate py-2.5 text-base text-surface transition-opacity hover:opacity-85 active:opacity-75;
+    box-shadow: inset 0 1px 1px color-mix(in srgb, var(--color-surface) 25%, transparent);
+  }
+
+  .landing-button-secondary {
+    @apply inline-flex min-h-11 items-center justify-center rounded-md border border-border-muted bg-surface/15 py-2.5 text-base text-text-slate transition-colors hover:bg-surface/60 active:bg-surface;
+  }
+
+  .landing-feature-heading {
+    @apply flex min-h-48 items-center border-l border-border/60 px-6 py-12 sm:ml-12 sm:min-h-56 sm:px-5 sm:py-14;
+  }
+
+  .landing-divider {
+    @apply h-12 border-y border-border sm:h-20;
+    background: repeating-linear-gradient(120deg, transparent 0px, transparent 4px, var(--color-border) 4px, transparent 5px);
+  }
+
+  .landing-glow {
+    @apply relative isolate;
+    background:
+      radial-gradient(ellipse at 36% -22%, color-mix(in srgb, var(--color-info) 40%, transparent), transparent 40%),
+      radial-gradient(ellipse at 99% 21%, color-mix(in srgb, var(--color-info) 30%, transparent), transparent 45%),
+      radial-gradient(ellipse at 52% 116%, color-mix(in srgb, var(--color-info) 35%, transparent), transparent 27%),
+      radial-gradient(ellipse at 55% 45%, var(--color-accent-muted) 10%, transparent 65%),
+      linear-gradient(125deg, var(--color-surface) 15%, var(--color-accent-muted));
+  }
+
+  .landing-glow::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0 -z-10 opacity-10;
+    background-image: url("/images/landing-noise.svg");
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+  }
 }
