@@ -194,7 +194,8 @@ export async function discoverJobs(
 
 ```typescript
 // Browser context — Client Components only
-import { insforge } from "@/lib/insforge-client";
+import { getInsforgeBrowser } from "@/lib/insforge-client";
+const insforge = getInsforgeBrowser();
 
 // Server context — Server Components, Route Handlers, Server Actions, Agent
 import { createInsforgeServer } from "@/lib/insforge-server";
@@ -245,6 +246,7 @@ All environment variables defined in `.env.local` for development. Never hardcod
 | ------------------------------- | ---------------------- |
 | `NEXT_PUBLIC_INSFORGE_URL`      | lib/insforge-client.ts |
 | `NEXT_PUBLIC_INSFORGE_ANON_KEY` | lib/insforge-client.ts |
+| `APP_URL` | Server-side auth callback and refresh origin |
 | `BROWSERBASE_API_KEY`           | lib/browserbase.ts     |
 | `BROWSERBASE_PROJECT_ID`        | lib/browserbase.ts     |
 | `OPENAI_API_KEY`                | agent/ functions       |
@@ -277,7 +279,8 @@ Always use the `@/` alias — never use relative imports that go up more than on
 ```typescript
 // Correct
 import { Button } from "@/components/ui/button";
-import { insforge } from "@/lib/insforge-client";
+import { getInsforgeBrowser } from "@/lib/insforge-client";
+const insforge = getInsforgeBrowser();
 import { MATCH_THRESHOLD } from "@/lib/utils";
 
 // Never
@@ -305,7 +308,7 @@ Never install a new package without a clear reason. Before installing anything c
 
 Approved dependencies for this project:
 
-- `@insforge/ssr` — InsForge client
+- `@insforge/sdk` — InsForge client, including `@insforge/sdk/ssr` helpers
 - `@browserbasehq/sdk` — Browserbase sessions
 - `@browserbasehq/stagehand` — AI browser control
 - `openai` — GPT-4o API

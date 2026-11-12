@@ -32,62 +32,31 @@ Never rely on general training knowledge alone for library APIs — they change 
 
 ### Client vs Server
 
-Two separate instances — never mix them:
+Auth was checked against InsForge MCP and the official SDK 1.5.2 SSR reference on 2026-10-17. SSR helpers are exported from `@insforge/sdk/ssr`, not a separate `@insforge/ssr` package.
 
 ```typescript
-// lib/insforge-client.ts — browser context only
-import { createBrowserClient } from "@insforge/ssr";
+// Browser context only, for future Storage/Realtime consumers
+import { getInsforgeBrowser } from "@/lib/insforge-client";
+const insforge = getInsforgeBrowser();
 
-export const insforge = createBrowserClient(
-  process.env.NEXT_PUBLIC_INSFORGE_URL!,
-  process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY!,
-);
+// Server Components, Route Handlers, Server Actions
+import { createInsforgeServer } from "@/lib/insforge-server";
+const insforge = await createInsforgeServer();
 ```
 
-```typescript
-// lib/insforge-server.ts — server context only
-import { createServerClient } from "@insforge/ssr";
-import { cookies } from "next/headers";
-
-export const createInsforgeServer = async () => {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_INSFORGE_URL!,
-    process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
-        },
-      },
-    },
-  );
-};
-```
-
-**Rules:**
-
-- Browser client — Client Components, browser-side auth state, realtime subscriptions
-- Server client — Server Components, API routes, Server Actions, agent functions
-- Never use browser client in server context
-- Never use server client in browser context
-
----
+Never mix browser and server clients. The server helper awaits Next.js cookies and creates a request-scoped client. The browser helper consumes the existing SSR session and refreshes through `/api/auth/refresh`; auth mutations run on the server.
 
 ### Auth
 
-```typescript
-// Get current user in server context
-const insforge = await createInsforgeServer();
-const {
-  data: { user },
-  error,
-} = await insforge.auth.getUser();
-if (!user) redirect("/login");
-```
+- Use `getCurrentUser()` for backend identity verification, not `getUser()`.
+- `lib/auth.ts` exports `getCurrentUser()` and `requireUser()`; protected pages call `requireUser()` before rendering. Future data mutations and API routes must verify independently.
+- `proxy.ts` uses `updateSession` from `@insforge/sdk/ssr/middleware`, then forwards the modified request cookies and preserves response cookies. Proxy cookie checks alone are not authorization.
+- `actions/auth.ts` initiates Google/GitHub OAuth with `createAuthActions()`. The PKCE verifier is a ten minute httpOnly cookie. `/api/auth/callback` exchanges the code on the server and redirects to `/dashboard`.
+- SDK cookies: browser-readable short-lived `insforge_access_token`, httpOnly `insforge_refresh_token`, SameSite=Lax, Secure in production, expiry from JWTs. No localStorage sessions or custom JWT signing.
+- Auth requires `NEXT_PUBLIC_INSFORGE_URL`, `NEXT_PUBLIC_INSFORGE_ANON_KEY`, and server-only `APP_URL` (app origin). Never use request Host to choose the callback origin.
+- Refresh is POST only with an Origin check. SDK 1.5.2 requires both top-level `accessToken` and `user` on success. Failures preserve the SDK HTTP status and machine-readable `error` code, with generic prose in `message`; 401 `AUTH_UNAUTHORIZED`/`AUTH_TOKEN_EXPIRED` triggers browser session cleanup. Preserve SDK Set-Cookie headers and no-store caching. Refresh tokens never enter JSON responses.
+- Use the sign out Server Action so local cookies are cleared and the router cache is invalidated.
+- Setup and manual OAuth verification: `docs/auth-setup.md`. Session design: `docs/specs/0001-auth.md`.
 
 ---
 

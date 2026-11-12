@@ -8,7 +8,8 @@ Update this file after every completed feature. Any AI agent reading this should
 
 **Phase:** 1, Foundation
 **Last completed:** 01 Homepage UI, built from the supplied landing page design.
-**Next:** 02 Auth, then connect homepage CTAs to the authenticated session.
+**In progress:** 02 Auth implemented; live Google/GitHub consent verification remains.
+**Next:** Complete the provider checks in `docs/auth-setup.md`, then 03 PostHog Initialization.
 
 ---
 
@@ -16,8 +17,8 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ### Phase 1 — Foundation
 
-- [x] 01 Homepage UI (session aware routing awaits 02 Auth)
-- [ ] 02 Auth
+- [x] 01 Homepage UI (session aware CTAs now connected)
+- [ ] 02 Auth — implementation and automated checks complete; awaiting live provider consent
 - [ ] 03 PostHog Initialization
 - [ ] 04 Database Schema
 
@@ -62,3 +63,21 @@ Update this file after every completed feature. Any AI agent reading this should
 - Chrome checks at 1440px and 390px confirmed all images load, Inter is applied, one primary heading is present, and there is no horizontal overflow. Desktop and mobile screenshots were inspected.
 - `/imprint` is referenced in AGENTS.md but no installed skill file was found. Component patterns are captured directly in `context/ui-registry.md`.
 - Next.js pages and layouts retain the default exports required by the installed framework; reusable components use named exports.
+
+## Auth implementation, 2026-10-17
+
+- Session decision recorded before implementation in `docs/specs/0001-auth.md`. Uses official `@insforge/sdk/ssr` helpers from SDK 1.5.2; stale auth examples in library-docs.md were updated.
+- Login supports Google/GitHub, pending and error states. OAuth starts in a Server Action, exchanges in `/api/auth/callback`, and redirects to `/dashboard`. Refresh uses app cookies, with an httpOnly refresh token and a short-lived browser-readable access token.
+- Next.js 16 `proxy.ts` refreshes cookies before rendering; protected pages verify identity with InsForge independently. Protected empty states exist for dashboard, profile, find jobs, and job details. Full page features remain unchecked above.
+- Homepage Get Started and Start for free now reflect the verified session. Logout clears local cookies and revalidates the app layout.
+- Added ignored `.env.local` only because none existed. Configuration and manual provider steps are in `docs/auth-setup.md`. Backend reports Google/GitHub enabled and an empty redirect allowlist; both provider authorization handoffs were reached successfully, without completing personal account consent.
+- Verification: ESLint and production webpack build passed. Login visually inspected at 1440px and 390px with no horizontal overflow. Real browser checks passed for anonymous redirects on all four protected routes, callback errors, cross-origin refresh rejection, and both provider handoffs.
+- Controlled backend fixture passed callback success/cookie flags, mismatched verifier rejection, forged token rejection, refresh forwarding to current request and browser, invalid refresh cleanup, backend user verification, refresh JSON excluding refresh credentials, and logout. These checks do not replace live OAuth consent verification.
+- Existing user changes to AGENTS.md were preserved. Tailwind v4 and existing Next.js configuration were retained.
+
+## Auth refresh review fix, 2026-10-18
+
+- Confirmed against installed SDK 1.5.2 (`dist/ssr.mjs`, browser refresh consumer and `refreshAuth`) and its SDK-REFERENCE.md, with auth docs refreshed through MCP: success requires both `accessToken` and `user`; 401 cleanup requires `AUTH_UNAUTHORIZED` or `AUTH_TOKEN_EXPIRED` in `error`.
+- Refresh responses now include `user`, preserve SDK error codes and HTTP statuses, keep generic prose in `message`, and retain cookie headers and no-store caching. Refresh credentials remain excluded from JSON.
+- Added `tests/auth-refresh.test.mjs` and `npm run test:auth` using Node's built-in runner, with real installed SDK helpers and mocked backend fetches. Tests reproduced the contract failures before the fix. All 10 pass, including browser token adoption and invalid-session cleanup, credential exclusion, cookie rotation/deletion, missing cookies, origin rejection, backend outages, and unexpected errors.
+- Validation passed: `npm run test:auth`, `npm run lint`, `npx tsc --noEmit`, and `npm run build -- --webpack`. No commit made. Live provider consent verification remains pending as recorded above.

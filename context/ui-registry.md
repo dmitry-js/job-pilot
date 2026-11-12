@@ -141,3 +141,56 @@ Exact static class strings:
 - `col-span-2 row-start-2 flex justify-center gap-8 text-sm text-text-darker sm:col-span-1 sm:col-start-2 sm:row-start-1`
 - `landing-nav-link`
 - `landing-button-primary col-start-2 row-start-1 justify-self-end px-5 text-sm sm:col-start-3`
+
+### Auth conventions
+
+Login follows the general app token system: Inter, background token, white bordered cards, purple primary action, responsive two column introduction and sign in card. The login page owns server reads; client controls receive a Server Action and safe state. Errors are generic; pending submits disable both providers. App destination shells are temporary empty states for Auth, not completed later page features.
+
+Homepage Navbar, Hero, ClosingCta, and CtaLinks accept an optional `authenticated` boolean supplied by the homepage's verified server session. Get Started and Start for free link to `/dashboard` when authenticated and `/login` otherwise. Find Your First Match links to `/find-jobs` when authenticated and `/login` otherwise.
+
+#### LoginPanel
+
+File: `components/auth/LoginPanel.tsx`
+
+Exact static class strings:
+
+- `rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-10`
+- `text-xs font-medium tracking-widest text-accent-dark`
+- `mt-3 text-3xl font-semibold tracking-tight text-text-primary`
+- `mt-4 text-sm leading-6 text-text-secondary`
+- `mt-8 flex flex-col gap-3`
+- `min-h-12 rounded-md bg-accent px-4 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-dark focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60`
+- `min-h-12 rounded-md border border-border bg-surface px-4 py-3 text-sm font-medium text-text-primary transition-colors hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-60`
+- `text-sm text-text-secondary`
+- `text-sm leading-6 text-text-primary`
+- `text-sm leading-6 text-text-secondary`
+- `mt-8 border-t border-border pt-6 text-xs leading-5 text-text-secondary`
+
+#### SignOutButton
+
+File: `components/auth/SignOutButton.tsx`
+
+Exact static class strings:
+
+- `flex flex-col items-end gap-2`
+- `min-h-11 rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface-secondary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent disabled:opacity-60`
+- `text-xs text-text-secondary`
+
+#### AppShell
+
+File: `components/layout/AppShell.tsx`
+
+Exact static class strings:
+
+- `min-h-screen bg-background`
+- `border-b border-border bg-surface`
+- `mx-auto flex min-h-16 max-w-360 flex-wrap items-center justify-between gap-4 px-6 py-3`
+- `order-3 flex w-full justify-center gap-6 sm:order-0 sm:w-auto`
+- `mx-auto max-w-360 p-6 sm:p-8`
+- `rounded-2xl border border-border bg-surface p-6 shadow-sm`
+- `text-xs text-text-secondary`
+- `mt-3 text-2xl font-semibold text-text-primary`
+- `mt-4 max-w-xl text-sm leading-6 text-text-secondary`
+- `mt-6 inline-flex min-h-11 items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-dark`
+
+AppShell navigation: `inline-flex min-h-11 items-center text-sm font-medium hover:text-accent` plus `text-accent` for the active route, otherwise `text-text-dark`. Active links use `aria-current="page"`.

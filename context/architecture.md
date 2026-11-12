@@ -38,8 +38,6 @@
 │   ├── (auth)/
 │   │   ├── login/
 │   │   │   └── page.tsx                   → Login page
-│   │   └── callback/
-│   │       └── page.tsx                   → OAuth callback handler
 │   ├── dashboard/
 │   │   └── page.tsx                       → Main dashboard
 │   ├── profile/
@@ -292,8 +290,8 @@ Access: authenticated users only, own files only.
 - Provider: InsForge Auth
 - Methods: Google OAuth, GitHub OAuth
 - Protected routes: /dashboard, /profile, /find-jobs, /find-jobs/[id]
-- Public routes: /, /login
-- Middleware in middleware.ts checks session on every protected route
+- Public routes: /, /login; OAuth completes in `/api/auth/callback`.
+- Next.js 16 `proxy.ts` refreshes session cookies and performs early route checks; each protected page also calls `requireUser()` for backend identity verification.
 - On login → redirect to /dashboard
 
 ---
@@ -303,37 +301,16 @@ Access: authenticated users only, own files only.
 Two separate InsForge instances — never mix them:
 
 ```typescript
-// lib/insforge-client.ts
-// Browser-side — used in client components for auth state
-import { createBrowserClient } from "@insforge/ssr";
-export const insforge = createBrowserClient(
-  process.env.NEXT_PUBLIC_INSFORGE_URL!,
-  process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY!,
-);
+// Browser context only: consumes the existing SSR session
+import { getInsforgeBrowser } from "@/lib/insforge-client";
+const insforge = getInsforgeBrowser();
 
-// lib/insforge-server.ts
-// Server-side — used in API routes, Server Actions, agent code
-import { createServerClient } from "@insforge/ssr";
-import { cookies } from "next/headers";
-
-export const createInsforgeServer = async () => {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_INSFORGE_URL!,
-    process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options),
-          );
-        },
-      },
-    },
-  );
-};
+// Server Components, Route Handlers, Server Actions and agent code
+import { createInsforgeServer } from "@/lib/insforge-server";
+const insforge = await createInsforgeServer();
 ```
+
+Both helpers use `@insforge/sdk/ssr` from the official SDK. The server helper awaits `cookies()` and creates a request-scoped client. Auth mutations use `createAuthActions()` in writable server contexts; `getCurrentUser()` verifies identity. The httpOnly refresh cookie stays on the server; the short-lived access cookie supports browser SDK consumers. Full session design: `docs/specs/0001-auth.md`. Setup: `docs/auth-setup.md`.
 
 ---
 
