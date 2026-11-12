@@ -81,3 +81,27 @@ Update this file after every completed feature. Any AI agent reading this should
 - Refresh responses now include `user`, preserve SDK error codes and HTTP statuses, keep generic prose in `message`, and retain cookie headers and no-store caching. Refresh credentials remain excluded from JSON.
 - Added `tests/auth-refresh.test.mjs` and `npm run test:auth` using Node's built-in runner, with real installed SDK helpers and mocked backend fetches. Tests reproduced the contract failures before the fix. All 10 pass, including browser token adoption and invalid-session cleanup, credential exclusion, cookie rotation/deletion, missing cookies, origin rejection, backend outages, and unexpected errors.
 - Validation passed: `npm run test:auth`, `npm run lint`, `npx tsc --noEmit`, and `npm run build -- --webpack`. No commit made. Live provider consent verification remains pending as recorded above.
+
+## PostHog review fixes, 2026-11-12
+
+- Addressed all four actionable findings in `docs/reviews/2026-11-12-main.md`: browser identity reconciliation, server event client, configuration naming, and the shell's client boundary.
+- Browser initialization stays in `instrumentation-client.ts`. Capture waits for verified page identity and pauses during navigation. Anonymous routes clear the previous identity; sign out propagates a reset to other tabs. Memory persistence avoids inheriting stale identity on full loads. Session recording is disabled.
+- Added the request-scoped `posthog-node` client with immediate flushing and a bounded, failure-safe shutdown helper. Existing OpenTelemetry OAuth logging is retained separately.
+- Documented `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` and deployment setup in `docs/analytics-setup.md`; registered the existing auth events. Captured the null-rendering identity component here and in the UI registry; no installed `/imprint` skill was found.
+- Automated analytics tests cover initial capture gating, expired/revoked session transitions, cross-tab reset, server delivery, shutdown failures, and absent configuration. Live PostHog ingestion and provider consent remain unverified.
+- Validation passed: `npm run test:analytics` (6 tests), `npm run test:auth` (10 tests), `npm run lint`, `npx tsc --noEmit`, `npm run build -- --webpack`, and `git diff --check`.
+
+## Local analytics and identity follow-up, 2026-11-12
+
+- PostHog browser capture, exceptions, server events, and OAuth log exports now default off outside production. Set `NEXT_PUBLIC_POSTHOG_ENABLE_DEV=true` and restart development to opt in. Production remains enabled with token and host.
+- Replaced memory persistence with `localStorage+cookie` to avoid merging a new anonymous ID on every reload. Reset only when a stored account differs from the verified session; anonymous-to-login attribution is preserved.
+- Event gating checks both verified route and distinct ID. Verified profile updates pass, while early or mismatched `$set` events stay blocked; the SDK's beforeSend rejection message is a local filter warning, not proof of server rejection.
+- Extended analytics regression coverage to development opt-in, production defaults, log exporter gating, returning identities, profile updates, and cross-tab identity changes. Live PostHog ingestion remains unverified.
+- Validation passed: analytics tests (11), auth tests (10), ESLint, TypeScript, production webpack build, and `git diff --check`.
+
+## Analytics navigation review, 2026-11-12
+
+- Confirmed with the installed SDK that `identify(userId)` assigns the same ID already authorized by reconciliation before emitting `$identify`; the suspected authenticated event mismatch is not present. Added a regression using the real SDK identity methods with capture transport stubbed.
+- Reproduced capture remaining suspended after query-only, same-URL, and cancelled navigation. Removed the navigation-start suspension hook. The existing pathname/identity filter still blocks destination events before reconciliation; component cleanup and sign out still suspend capture.
+- Added regressions for these three stalled-navigation cases and normal pathname transitions. Analytics suite now has 16 tests.
+- Validation passed: analytics tests (16), auth tests (10), ESLint, TypeScript, production webpack build, and whitespace checks. The three unchanged-pathname regressions failed before the fix and pass afterward.

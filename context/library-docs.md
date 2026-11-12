@@ -516,60 +516,29 @@ const result = JSON.parse(response.choices[0].message.content!);
 
 **Check first:** Check AGENTS.md for an installed PostHog skill. If a PostHog MCP server is configured — use it. The skill/MCP will have the latest client and server patterns.
 
-### Client Setup (Browser)
+### Browser setup
+
+All PostHog channels are disabled outside production unless `NEXT_PUBLIC_POSTHOG_ENABLE_DEV=true`. The shared policy is in `lib/posthog-config.ts`. Production still requires token and host but ignores this development switch.
+
+`instrumentation-client.ts` initializes `lib/posthog-client.ts` before hydration using `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` and `NEXT_PUBLIC_POSTHOG_HOST`. `AnalyticsIdentity` receives verified server user props on the homepage, login page, and protected shell. Events are gated until identity reconciliation; pageviews are captured afterward. Events for a changed pathname are blocked until the destination effect reconciles identity. Navigation attempts do not suspend capture: query-only, same-URL, and cancelled transitions may not rerun that effect. Durable `localStorage+cookie` persistence retains returning identities. Reconciliation resets a stored account that differs from the verified session; the event gate checks both pathname and distinct ID. Verified `$identify`/`$set` updates pass; stale updates are blocked. Sign out resets identity and broadcasts a reset to other tabs through a storage event. Session recording is disabled.
+
+### Server setup
+
+`lib/posthog-server.ts` exports `createPostHogServer()` with `flushAt: 1` and `flushInterval: 0`. Prefer `captureServerEvent({ userId, event, properties })`, which includes the verified user ID as both `distinctId` and a property and awaits `shutdown()` in `finally`. Requests and shutdown have a two-second timeout; analytics errors do not fail application work. Missing configuration disables analytics. The OpenTelemetry logger in `instrumentation.ts` is separate from this event client.
 
 ```typescript
-// lib/posthog-client.ts
-import posthog from "posthog-js";
+import { captureServerEvent } from "@/lib/posthog-server";
 
-export function initPostHog() {
-  if (typeof window !== "undefined") {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-      capture_pageview: false, // manual pageview tracking
-    });
-  }
-}
-
-// Capture event client-side
-posthog.capture("job_found", {
-  userId,
-  source: "search",
-  matchScore: score,
-});
-```
-
-### Server Setup
-
-```typescript
-// lib/posthog-server.ts
-import { PostHog } from "posthog-node";
-
-export const createPostHogServer = () =>
-  new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
-    flushAt: 1, // send immediately
-    flushInterval: 0, // no batching — Next.js functions are short-lived
-  });
-
-// Always use and shutdown in the same function
-const posthog = createPostHogServer();
-posthog.capture({
-  distinctId: userId,
+await captureServerEvent({
+  userId: user.id,
   event: "company_researched",
-  properties: { userId, jobId, company },
+  properties: { jobId, company },
 });
-await posthog.shutdown(); // required — ensures event is sent
 ```
 
-**Rules:**
+Use event names registered in `code-standards.md`. Always derive the user ID from verified authentication. When using the factory directly, await `shutdown()` in `finally`.
 
-- Always call `await posthog.shutdown()` in server-side functions — events are lost without it
-- `flushAt: 1` and `flushInterval: 0` always set on server client
-- Event names must match exactly the list in `code-standards.md`
-- Always include `userId` as a property on every server-side event
-- Call `posthog.identify(userId)` after login on client side
-- Call `posthog.reset()` on logout on client side
+Deployment configuration is documented in `docs/analytics-setup.md`.
 
 ---
 

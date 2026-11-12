@@ -1,17 +1,20 @@
 import Link from "next/link";
+import { AnalyticsIdentity } from "@/components/analytics/AnalyticsIdentity";
 import { Brand } from "@/components/layout/Brand";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 type Props = {
   title: string;
   description: string;
+  userId: string;
   email: string;
   activePath: string;
 };
 
-export function AppShell({ title, description, email, activePath }: Props): React.JSX.Element {
+export function AppShell({ title, description, userId, email, activePath }: Props): React.JSX.Element {
   return (
     <div className="min-h-screen bg-background">
+      <AnalyticsIdentity userId={userId} email={email} />
       <header className="border-b border-border bg-surface">
         <div className="mx-auto flex min-h-16 max-w-360 flex-wrap items-center justify-between gap-4 px-6 py-3">
           <Brand />

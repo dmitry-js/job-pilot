@@ -1,3 +1,4 @@
+import { AnalyticsIdentity } from "@/components/analytics/AnalyticsIdentity";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LoginPanel } from "@/components/auth/LoginPanel";
@@ -13,6 +14,7 @@ export default async function LoginPage({ searchParams }: Props): Promise<React.
   const { error } = await searchParams;
   return (
     <div className="min-h-screen bg-background">
+      <AnalyticsIdentity userId={null} />
       <header className="border-b border-border bg-surface"><div className="mx-auto flex min-h-16 max-w-360 items-center justify-between gap-4 px-6"><Brand /><Link href="/" className="text-sm font-medium text-text-secondary hover:text-accent">Back to home</Link></div></header>
       <main className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-12 sm:px-8 sm:py-20 lg:grid-cols-2 lg:gap-20">
         <section aria-labelledby="intro-heading">

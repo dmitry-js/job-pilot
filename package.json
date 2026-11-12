@@ -7,11 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:auth": "node --experimental-strip-types --experimental-test-isolation=none --test tests/auth-refresh.test.mjs"
+    "test:auth": "node --experimental-strip-types --experimental-test-isolation=none --test tests/auth-refresh.test.mjs",
+    "test:analytics": "node --experimental-strip-types --experimental-test-isolation=none --test tests/analytics.test.mjs"
   },
   "dependencies": {
     "@insforge/sdk": "^1.5.2",
+    "@opentelemetry/api-logs": "^0.223.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.301.1",
+    "@opentelemetry/resources": "^3.1.1",
+    "@opentelemetry/sdk-logs": "^3.1.1",
     "next": "16.3.5",
+    "posthog-js": "^1.447.15",
+    "posthog-node": "^5.70.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

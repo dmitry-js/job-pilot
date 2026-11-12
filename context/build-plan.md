@@ -53,11 +53,11 @@ Set up PostHog before any events fire. Must be done before any agent features.
 
 **Logic:**
 
-- Create lib/posthog-client.ts — PostHog browser client, initialized with NEXT_PUBLIC_POSTHOG_KEY and NEXT_PUBLIC_POSTHOG_HOST
+- Create lib/posthog-client.ts — PostHog browser client, initialized with NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN and NEXT_PUBLIC_POSTHOG_HOST
 - Create lib/posthog-server.ts — PostHog server client with flushAt: 1 and flushInterval: 0
-- Initialize PostHog in root app layout — wraps entire app
+- Initialize PostHog in instrumentation-client.ts before hydration; reconcile verified identity in the page-level AnalyticsIdentity component before capturing events
 - posthog.identify() called after successful login with user ID
-- posthog.reset() called on logout
+- posthog.reset() called on logout and on authenticated-to-anonymous transitions; propagate logout to other tabs
 
 ---
 

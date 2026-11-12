@@ -194,3 +194,13 @@ Exact static class strings:
 - `mt-6 inline-flex min-h-11 items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-dark`
 
 AppShell navigation: `inline-flex min-h-11 items-center text-sm font-medium hover:text-accent` plus `text-accent` for the active route, otherwise `text-text-dark`. Active links use `aria-current="page"`.
+
+#### AnalyticsIdentity
+
+File: `components/analytics/AnalyticsIdentity.tsx`
+
+A Client Component returning `null`, with no classes or visible markup. Mounted by the homepage, login page, and `AppShell`, with user ID/email from verified server authentication. Reconciles PostHog identity before pageview capture and suspends capture on cleanup. `AppShell` remains a Server Component; sign out remains interactive.
+
+Analytics follow-up (2026-11-12): the existing identity component and auth/error controls honor the shared development opt-in. Identity reconciliation now preserves durable IDs and validates the event distinct ID; no visual markup or classes changed.
+
+Navigation review (2026-11-12): `AnalyticsIdentity` still reconciles on pathname/session changes and suspends on cleanup. Navigation attempts no longer suspend globally; unchanged-pathname transitions keep tracking the verified page. No visual changes.

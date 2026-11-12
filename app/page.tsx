@@ -1,3 +1,4 @@
+import { AnalyticsIdentity } from "@/components/analytics/AnalyticsIdentity";
 import { getCurrentUser } from "@/lib/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -8,9 +9,11 @@ import { Testimonial } from "@/components/homepage/Testimonial";
 import { ClosingCta } from "@/components/homepage/ClosingCta";
 
 export default async function Home(): Promise<React.JSX.Element> {
-  const authenticated = Boolean(await getCurrentUser());
+  const user = await getCurrentUser();
+  const authenticated = Boolean(user);
   return (
     <>
+      <AnalyticsIdentity userId={user?.id ?? null} email={user?.email} />
       <a href="#main-content" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to content</a>
       <Navbar authenticated={authenticated} />
       <main id="main-content" className="mx-auto mt-8 max-w-7xl border-x border-t border-border sm:mt-15 max-[1328px]:mx-6 max-sm:mx-4">
